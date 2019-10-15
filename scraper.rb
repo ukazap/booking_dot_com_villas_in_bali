@@ -1,25 +1,28 @@
 # This is a template for a Ruby scraper on morph.io (https://morph.io)
 # including some code snippets below that you should find helpful
 
-# require 'scraperwiki'
-# require 'mechanize'
-#
-# agent = Mechanize.new
-#
-# # Read in a page
-# page = agent.get("http://foo.com")
-#
-# # Find somehing on the page using css selectors
-# p page.at('div.content')
-#
-# # Write out to the sqlite database using scraperwiki library
-# ScraperWiki.save_sqlite(["name"], {"name" => "susan", "occupation" => "software developer"})
-#
-# # An arbitrary query against the database
-# ScraperWiki.select("* from data where 'name'='peter'")
+require 'scraperwiki'
+require 'mechanize'
 
-# You don't have to do things with the Mechanize or ScraperWiki libraries.
-# You can use whatever gems you want: https://morph.io/documentation/ruby
-# All that matters is that your final data is written to an SQLite database
-# called "data.sqlite" in the current working directory which has at least a table
-# called "data".
+data = []
+agent = Mechanize.new
+start_url = "https://www.booking.com/searchresults.en-gb.html?aid=304142&label=gen173nr-1FCAEoggI46AdIM1gEaGiIAQGYAQm4AQfIAQzYAQHoAQH4AQuIAgGoAgO4Auv1le0FwAIB&sid=1876e63eb536b37149c5db2c76040480&tmpl=searchresults&ac_click_type=b&ac_position=0&class_interval=1&clear_ht_id=1&dest_id=835&dest_type=region&from_sf=1&group_adults=2&group_children=0&label_click=undef&nflt=ht_id%3D213%3B&no_rooms=1&percent_htype_hotel=1&raw_dest_type=region&room1=A%2CA&sb_price_type=total&search_selected=1&shw_aparth=1&slp_r_match=0&src=index&srpvid=c3523cc0b5a4008b&ss=Bali%2C%20Indonesia&ss_raw=Bali&ssb=empty&top_ufis=1&rows=25"
+
+page = agent.get(start_url)
+
+loop do
+  page.search(".sr_item.sr_item_new").each do |item|
+    hotel_name_link = item.at_css('.hotel_name_link.url')
+    ScraperWiki.save_sqlite(['href'], {
+      'href' => hotel_name_link[:href].strip,
+      'title' => hotel_name_link.at_css('.sr-hotel__name').text.strip,
+      'coordinates' => item.at_css('.bui-link').attr('data-coords').strip,
+      'address' => item.at_css('.bui-link > text()').to_s.strip,
+      'review_score' => item.at_css(".bui-review-score__badge")&.text&.strip
+    })
+  end
+
+  next_button = page.at_css('.bui-pagination__item.bui-pagination__next-arrow:not(.bui-pagination__item--disabled)')
+  break if next_button.nil?
+  page = agent.click(next_button)
+end
