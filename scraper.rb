@@ -14,21 +14,22 @@ page = agent.get(start_url)
 loop do
   page.search(".sr_item.sr_item_new").each do |item|
     hotel_name_link = item.at_css('.hotel_name_link.url')
-    ScraperWiki.save_sqlite(['href'], {
+
+    data = {
       'href' => hotel_name_link[:href].strip,
-      'title' => hotel_name_link.at_css('.sr-hotel__name').text.strip,
+      'name' => hotel_name_link.at_css('.sr-hotel__name').text.strip,
       'coordinates' => item.at_css('.bui-link').attr('data-coords').strip,
       'address' => item.at_css('.bui-link > text()').to_s.strip,
       'review_score' => item['data-score']
-    })
+    }
+    
+    puts "add #{data['name']}"
+    ScraperWiki.save_sqlite(['href'], data)
   end
-
+  
   next_button = page.link_with(css: '.bui-pagination__link.paging-next')
-  if next_button.nil?
-    puts "Can't find the next button"
-    break
-  end
-  puts "going to the next Page"
-  page = next_button.click
-  puts "get to the next page"
+  break if next_button.nil?
+  next_button.click
 end
+
+puts "done"
