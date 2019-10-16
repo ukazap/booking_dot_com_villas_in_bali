@@ -19,7 +19,7 @@ start_urls.each do |start_url|
     page.search(".sr_item.sr_item_new").each do |item|
       hotel_name_link = item.at_css('.hotel_name_link.url')
       hotel_name = hotel_name_link.at_css('.sr-hotel__name').text.strip
-      hotel_coordinate = item.at_css('.bui-link').attr('data-coords').strip.split(',').reverse.join(',')
+      hotel_coordinates = item.at_css('.bui-link').attr('data-coords').strip.split(',').reverse.join(',')
 
       request = HTTP.get("https://maps.googleapis.com/maps/api/place/findplacefromtext/json", :params => {
         input: hotel_name,
@@ -28,12 +28,10 @@ start_urls.each do |start_url|
       })
 
       candidate = request.parse['status'] == "OK" ? request.parse["candidates"].first : {}
-
-      puts request.parse['status']
  
       place_id = candidate["place_id"]
 
-      contancts = HTTP.get('https://maps.googleapis.com/maps/api/place/details/json', :params => {
+      contact_info = HTTP.get('https://maps.googleapis.com/maps/api/place/details/json', :params => {
         key: api_key,
         place_id: place_id,
         fields: 'international_phone_number,formatted_phone_number,website'
@@ -42,12 +40,11 @@ start_urls.each do |start_url|
       data = {
         'href' => hotel_name_link[:href].split(".en-gb")[0],
         'name' => hotel_name,
-        'coordinates' => hotel_coordinate,
+        'coordinates' => hotel_coordinates,
         'address' => item.at_css('.bui-link > text()').to_s.strip,
         'review_score' => item['data-score'],
-        'international_phone_number' => contancts['international_phone_number'],
-        'formatted_phone_number' => contancts['formatted_phone_number'],
-        'website' => contancts['website']
+        'phone_number' => contact_info['international_phone_number'],
+        'website' => contact_info['website']
       }
 
       print "."
