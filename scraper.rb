@@ -7,30 +7,33 @@ require 'mechanize'
 data = []
 agent = Mechanize.new
 agent.user_agent_alias = 'Linux Firefox'
-start_url = ENV['MORPH_START_URL']
 
-page = agent.get(start_url)
+start_urls = ENV['MORPH_START_URLS'].lines.map(&:strip)
 
-loop do
-  page.search(".sr_item.sr_item_new").each do |item|
-    hotel_name_link = item.at_css('.hotel_name_link.url')
+start_urls.each do |start_url|
+  page = agent.get(start_url)
 
-    data = {
-      'href' => hotel_name_link[:href].split(".en-gb")[0],
-      'name' => hotel_name_link.at_css('.sr-hotel__name').text.strip,
-      'coordinates' => item.at_css('.bui-link').attr('data-coords').strip.split(',').reverse.join(','),
-      'address' => item.at_css('.bui-link > text()').to_s.strip,
-      'review_score' => item['data-score']
-    }
+  loop do
+    page.search(".sr_item.sr_item_new").each do |item|
+      hotel_name_link = item.at_css('.hotel_name_link.url')
 
-    print "."
-    ScraperWiki.save_sqlite(['name', 'coordinates'], data)
+      data = {
+        'href' => hotel_name_link[:href].split(".en-gb")[0],
+        'name' => hotel_name_link.at_css('.sr-hotel__name').text.strip,
+        'coordinates' => item.at_css('.bui-link').attr('data-coords').strip.split(',').reverse.join(','),
+        'address' => item.at_css('.bui-link > text()').to_s.strip,
+        'review_score' => item['data-score']
+      }
+
+      print "."
+      ScraperWiki.save_sqlite(['name', 'coordinates'], data)
+    end
+
+    next_button = page.link_with(css: '.bui-pagination__link.paging-next')
+    break if next_button.nil?
+    page = next_button.click
+    puts "next page"
   end
 
-  next_button = page.link_with(css: '.bui-pagination__link.paging-next')
-  break if next_button.nil?
-  page = next_button.click
-  puts "next page"
+  puts "done"
 end
-
-puts "done"
