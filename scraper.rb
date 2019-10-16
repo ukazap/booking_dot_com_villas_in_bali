@@ -21,16 +21,17 @@ start_urls.each do |start_url|
       hotel_name = hotel_name_link.at_css('.sr-hotel__name').text.strip
       hotel_coordinate = item.at_css('.bui-link').attr('data-coords').strip.split(',').reverse.join(',')
 
-      candidate = HTTP.get("https://maps.googleapis.com/maps/api/place/findplacefromtext/json", :params => {
+      request = HTTP.get("https://maps.googleapis.com/maps/api/place/findplacefromtext/json", :params => {
         input: hotel_name,
         key: api_key,
         inputtype: 'textquery'
-      }).parse['candidates'].first || {}
+      })
 
-      place_id = candidate['place_id']
-      puts candidate
-      puts hotel_name
+      candidate = request.parse['status'] == "OK" ? request.parse["candidates"].first : {}
 
+      puts request.parse['status']
+ 
+      place_id = candidate["place_id"]
 
       contancts = HTTP.get('https://maps.googleapis.com/maps/api/place/details/json', :params => {
         key: api_key,
