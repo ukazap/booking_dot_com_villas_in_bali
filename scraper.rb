@@ -8,7 +8,7 @@ require 'http'
 data = []
 agent = Mechanize.new
 agent.user_agent_alias = 'Linux Firefox'
-api_key = ENV['MORPH_GOOGLE_MAP_API_KEY']
+api_key = ENV['MORPH_GOOGLE_MAP_API_KEY'].strip
     
 start_urls = ENV['MORPH_START_URLS'].lines.map(&:strip)
 
@@ -25,9 +25,12 @@ start_urls.each do |start_url|
         input: hotel_name,
         key: api_key,
         inputtype: 'textquery'
-      }).parse['candidates'].first
+      }).parse['candidates'].first || {}
 
-      place_id = candidate['place_id'] if !candidate.nil?
+      place_id = candidate['place_id']
+      puts candidate
+      puts hotel_name
+
 
       contancts = HTTP.get('https://maps.googleapis.com/maps/api/place/details/json', :params => {
         key: api_key,
