@@ -23,7 +23,7 @@ loop do
       'review_score' => item['data-score']
     }
 
-    puts "add #{data['name']}"
+    print "."
     ScraperWiki.save_sqlite(['name', 'coordinates'], data)
   end
 
