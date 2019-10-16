@@ -18,11 +18,17 @@ loop do
       'title' => hotel_name_link.at_css('.sr-hotel__name').text.strip,
       'coordinates' => item.at_css('.bui-link').attr('data-coords').strip,
       'address' => item.at_css('.bui-link > text()').to_s.strip,
-      'review_score' => item.at_css(".bui-review-score__badge")&.text&.strip
+      'review_score' => item['data-score']
     })
   end
 
-  next_button = page.at_css('.bui-pagination__item.bui-pagination__next-arrow:not(.bui-pagination__item--disabled)')
-  break if next_button.nil?
-  page = agent.click(next_button)
+  next_button = page.link_with(css: '.bui-pagination__link.paging-next')
+  if next_button.nil?
+    puts "Can't find the next button"
+    break
+  end
+  puts "going to the next Page"
+  page = next_button.click
+  puts page.search(".sr_item.sr_item_new").to_s
+  puts "get to the next page"
 end
