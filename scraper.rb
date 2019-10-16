@@ -18,7 +18,7 @@ loop do
     data = {
       'href' => hotel_name_link[:href].strip.gsub(/\?.+/, ''),
       'name' => hotel_name_link.at_css('.sr-hotel__name').text.strip,
-      'coordinates' => item.at_css('.bui-link').attr('data-coords').strip,
+      'coordinates' => item.at_css('.bui-link').attr('data-coords').strip.split(',').reverse.join(','),
       'address' => item.at_css('.bui-link > text()').to_s.strip,
       'review_score' => item['data-score']
     }
