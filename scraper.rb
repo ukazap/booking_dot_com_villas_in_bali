@@ -16,7 +16,7 @@ loop do
     hotel_name_link = item.at_css('.hotel_name_link.url')
 
     data = {
-      'href' => hotel_name_link[:href].strip.gsub(/\?.+/, ''),
+      'href' => hotel_name_link[:href].split(".en-gb")[0],
       'name' => hotel_name_link.at_css('.sr-hotel__name').text.strip,
       'coordinates' => item.at_css('.bui-link').attr('data-coords').strip.split(',').reverse.join(','),
       'address' => item.at_css('.bui-link > text()').to_s.strip,
