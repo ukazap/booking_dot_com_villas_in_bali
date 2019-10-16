@@ -12,6 +12,7 @@ page = agent.get(start_url)
 
 loop do
   page.search(".sr_item.sr_item_new").each do |item|
+    print "."
     hotel_name_link = item.at_css('.hotel_name_link.url')
     ScraperWiki.save_sqlite(['href'], {
       'href' => hotel_name_link[:href].strip,
@@ -21,8 +22,8 @@ loop do
       'review_score' => item.at_css(".bui-review-score__badge")&.text&.strip
     })
   end
-
-  next_button = page.at_css('.bui-pagination__item.bui-pagination__next-arrow:not(.bui-pagination__item--disabled)')
+  next_button = page.at_css('a.bui-pagination__link sr_pagination_link')
   break if next_button.nil?
-  page = agent.click(next_button)
+  puts "next page"
+  page = agent.get(next_button[:href])
 end
