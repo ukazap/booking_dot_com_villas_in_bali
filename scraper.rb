@@ -24,7 +24,8 @@ start_urls.each do |start_url|
       request = HTTP.get("https://maps.googleapis.com/maps/api/place/findplacefromtext/json", params: {
         input: hotel_name,
         key: api_key,
-        inputtype: 'textquery'
+        inputtype: 'textquery',
+        locationbias: "point:#{hotel_coordinates}"
       })
 
       place_id = request.parse["candidates"].first["place_id"] rescue nil
@@ -34,12 +35,12 @@ start_urls.each do |start_url|
         contact_info = HTTP.get('https://maps.googleapis.com/maps/api/place/details/json', params: {
           key: api_key,
           place_id: place_id,
-          fields: 'international_phone_number,formatted_phone_number,website'
+          fields: 'international_phone_number,website'
         }).parse['result'] || {}
       end
 
       data = {
-        'href' => hotel_name_link[:href].split(".en-gb")[0],
+        'href' => hotel_name_link[:href].split(".en-gb")[0].strip,
         'name' => hotel_name,
         'coordinates' => hotel_coordinates,
         'address' => item.at_css('.bui-link > text()').to_s.strip,
